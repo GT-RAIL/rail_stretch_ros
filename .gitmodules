@@ -1,0 +1,3 @@
+[submodule "dependencies/m-explore"]
+	path = dependencies/m-explore
+	url = https://github.com/hrnr/m-explore.git
