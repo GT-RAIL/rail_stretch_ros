@@ -1,0 +1,14 @@
+<launch>
+    <node ns="fixed_cartesian_move" name="rotate_pid" pkg="pid" type="controller" >
+        <param name="Kp" value="5.0" />
+        <param name="Ki" value="0.0" />
+        <param name="Kd" value="0.1" />
+        <param name="upper_limit" value=".5" />
+        <param name="lower_limit" value="-.5" />
+        <param name="windup_limit" value=".5" />
+        <param name="max_loop_frequency" value="100.0" />
+        <param name="min_loop_frequency" value="100.0" />
+    </node>
+
+    <node name="fixed_cartesian_move" pkg="rail_stretch_navigation" type="fixed_cartesian_move.py"/>
+</launch>
