@@ -1,36 +1,3 @@
-  <launch>
-    <param name="/stretch_driver/broadcast_odom_tf" type="bool" value="true"/>
-    <param name="/stretch_driver/mode" type="string" value="navigation" />
-    <include file="$(find stretch_core)/launch/stretch_driver.launch" pass_all_args="true"/>
-
-    <include file="$(find stretch_core)/launch/rplidar.launch" />
-
-    <node name="teleop_twist_keyboard" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" output="screen" >
-      <param name="speed" type="double" value="0.04" />
-      <param name="turn" type="double" value="0.1" />
-      <remap from="/cmd_vel" to="/stretch/cmd_vel" />
-    </node>
-
-    <node name="rviz" pkg="rviz" type="rviz" output="log" args="-d $(find rail_stretch_navigation)/rviz/nav.rviz" />
-
-    <node pkg="gmapping" type="slam_gmapping" name="gmapping" output="log">
-      <param name="base_frame" value="base_link"/>
-      <param name="odom_frame" value="odom" />
-      <param name="delta" value="0.1" />
-    </node>
-
-    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
-      <rosparam file="$(find stretch_navigation)/config/common_costmap_params.yaml" command="load" ns="global_costmap" />
-      <rosparam file="$(find stretch_navigation)/config/common_costmap_params.yaml" command="load" ns="local_costmap" />
-      <rosparam file="$(find stretch_navigation)/config/local_costmap_params.yaml" command="load" />
-      <rosparam file="$(find stretch_navigation)/config/global_costmap_params_nomap.yaml" command="load" />
-      <rosparam file="$(find stretch_navigation)/config/base_local_planner_params.yaml" command="load" />
-      
-      <param name="base_local_planner" value="teb_local_planner/TebLocalPlannerROS" />
-      <param name="controller_frequency" value="10.0" />
-      
-      <remap from="/cmd_vel" to="/stretch/cmd_vel" />
-    </node>
-    
-    <include file="$(find explore_lite)/launch/explore.launch"/>
-  </launch>
+<launch>
+  <include file="$(find explore_lite)/launch/explore.launch"/>
+</launch>

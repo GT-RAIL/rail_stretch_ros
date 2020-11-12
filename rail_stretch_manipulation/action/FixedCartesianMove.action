@@ -1,0 +1,7 @@
+geometry_msgs/Point goal
+---
+float64 linear_error
+float64 angular_error
+---
+float64 linear_error
+float64 angular_error
