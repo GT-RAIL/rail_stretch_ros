@@ -1,3 +1,6 @@
 [submodule "dependencies/m-explore"]
 	path = dependencies/m-explore
 	url = https://github.com/hrnr/m-explore.git
+[submodule "dependencies/darknet_ros"]
+	path = dependencies/darknet_ros
+	url = https://github.com/leggedrobotics/darknet_ros.git

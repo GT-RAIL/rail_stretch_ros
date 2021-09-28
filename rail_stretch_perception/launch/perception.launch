@@ -1,0 +1,4 @@
+<launch>
+  <node name="object_manager" pkg="rail_stretch_perception" type="object_manager.py" output="screen" />
+  <!-- <include file="$(find stretch_deep_perception)/launch/stretch_detect_objects.launch"> -->
+</launch>
