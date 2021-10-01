@@ -5,6 +5,7 @@ import tf2_ros
 import tf2_geometry_msgs
 from visualization_msgs.msg import MarkerArray
 from geometry_msgs.msg import PoseStamped
+from rail_stretch_perception.msg import ObjectArray
 
 def position_distance(pos1, pos2):
   return math.sqrt((pos1.x - pos2.x)**2 + (pos1.y - pos2.y)**2 + (pos1.z - pos2.z)**2)
@@ -17,6 +18,7 @@ class ObjectManager():
     self.tf_buffer = tf2_ros.Buffer()
     self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
     rospy.Subscriber('/objects/marker_array', MarkerArray, self.objects_detected_callback)
+    self.objects_pub = rospy.Publisher('/object_manager/object_names', ObjectArray, queue_size=10)
 
   def get_position_in_map(self, marker):
     try:
@@ -31,7 +33,7 @@ class ObjectManager():
     except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
       pass
 
-  def objects_detected_callback(self, msg): 
+  def objects_detected_callback(self, msg):
     print(self.object_dict)
     for marker in msg.markers:
       if marker.text not in self.object_dict.keys():
@@ -43,6 +45,10 @@ class ObjectManager():
             self.object_dict[marker.text][i] = p_in_map
           else:
             self.object_dict[marker.text].append(p_in_map)
+
+    objects_msg = ObjectArray()
+    objects_msg.object_names = self.object_dict.keys()
+    self.objects_pub.publish(objects_msg, latch=True)
         
 
 if __name__ == '__main__':
