@@ -1,11 +1,10 @@
 <launch>
-
+  <arg name="move_forward_only" default="false"/>
   <!-- <arg name="map_yaml" /> -->
 
   <!-- <param name="/stretch_driver/broadcast_odom_tf" type="bool" value="true"/>
   <param name="/stretch_driver/mode" type="string" value="navigation" />
   <include file="$(find stretch_core)/launch/stretch_driver.launch" pass_all_args="true"/>
-  <arg name="move_forward_only" default="false"/>
 
   <include file="$(find stretch_core)/launch/rplidar.launch" /> -->
   <!--

@@ -5,18 +5,6 @@
 
     <include file="$(find stretch_core)/launch/rplidar.launch" />
 
-    <!-- REALSENSE D435i -->
-    <include file="$(find stretch_core)/launch/d435i_high_resolution.launch"></include>
-    <node name="d435i_configure" pkg="stretch_core" type="d435i_configure" output="screen">
-      <!--<param name="initial_mode" type="string" value="Default"/>-->
-      <param name="initial_mode" type="string" value="High Accuracy"/>
-    </node>
-    <!-- -->
-
-    <!-- FRUSTUM FIELD OF VIEW VISUALIZATION -->
-    <node name="d435i_frustum_visualizer" pkg="stretch_core" type="d435i_frustum_visualizer" output="screen" />
-    <!-- -->
-
     <node name="teleop_twist_keyboard" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" output="screen" >
       <param name="speed" type="double" value="0.04" />
       <param name="turn" type="double" value="0.1" />
