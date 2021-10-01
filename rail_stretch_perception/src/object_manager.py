@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 import rospy
 import math
+from rospy import client
 import tf2_ros
 import tf2_geometry_msgs
 from visualization_msgs.msg import MarkerArray
 from geometry_msgs.msg import PoseStamped
 from rail_stretch_perception.msg import ObjectArray
+from rail_stretch_perception.srv import NavigateToObject
+import actionlib
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 
 def position_distance(pos1, pos2):
   return math.sqrt((pos1.x - pos2.x)**2 + (pos1.y - pos2.y)**2 + (pos1.z - pos2.z)**2)
@@ -19,6 +23,29 @@ class ObjectManager():
     self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
     rospy.Subscriber('/objects/marker_array', MarkerArray, self.objects_detected_callback)
     self.objects_pub = rospy.Publisher('/object_manager/object_names', ObjectArray, queue_size=10, latch=True)
+    self.navigate_to_object_service = rospy.Service('/object_manager/navigate_to_object', NavigateToObject, self.navigate_to_object)
+
+    self.move_base_client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
+    self.move_base_client.wait_for_server()
+
+  def navigate_to_object(self, req):
+    print(req)
+
+    if req.object_name in self.object_dict:
+      goal = MoveBaseGoal()
+      goal.target_pose = PoseStamped()
+      goal.target_pose.pose = self.object_dict[req.object_name][0]
+      goal.target_pose.header.stamp = rospy.Time(0)
+      goal.target_pose.header.frame_id = 'map'
+      goal.target_pose.pose.position.z = 0
+      goal.target_pose.pose.orientation.x = 0
+      goal.target_pose.pose.orientation.y = 0
+      goal.target_pose.pose.orientation.z = 0
+      goal.target_pose.pose.orientation.w = 1
+      self.move_base_client.send_goal(goal)
+      return True
+    
+    return False
 
   def get_pose_in_map(self, marker):
     try:
