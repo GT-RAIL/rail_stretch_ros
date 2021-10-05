@@ -5,9 +5,12 @@
 
     <include file="$(find stretch_core)/launch/rplidar.launch" />
 
-    <node name="teleop_twist_keyboard" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" output="screen" >
-      <param name="speed" type="double" value="0.04" />
-      <param name="turn" type="double" value="0.1" />
-      <remap from="/cmd_vel" to="/stretch/cmd_vel" />
+    <!-- REALSENSE D435i -->
+    <include file="$(find stretch_core)/launch/d435i_high_resolution.launch"></include>
+    <node name="d435i_configure" pkg="stretch_core" type="d435i_configure" output="screen">
+      <param name="initial_mode" type="string" value="High Accuracy"/>
     </node>
+    <!-- -->
+
+    <node name="keyboard_teleop" pkg="stretch_core" type="keyboard_teleop" output="screen"/>
 </launch>

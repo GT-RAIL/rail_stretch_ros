@@ -1,15 +1,12 @@
 #!/usr/bin/env python
 import rospy
 import math
-from rospy import client
+import rospy
 import tf2_ros
 import tf2_geometry_msgs
 from visualization_msgs.msg import MarkerArray
 from geometry_msgs.msg import PoseStamped
-from rail_stretch_perception.msg import ObjectArray
-from rail_stretch_perception.srv import NavigateToObject
-import actionlib
-from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+from rail_stretch_perception.msg import ObjectNames
 
 def position_distance(pos1, pos2):
   return math.sqrt((pos1.x - pos2.x)**2 + (pos1.y - pos2.y)**2 + (pos1.z - pos2.z)**2)
@@ -22,32 +19,9 @@ class ObjectManager():
     self.tf_buffer = tf2_ros.Buffer()
     self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
     rospy.Subscriber('/objects/marker_array', MarkerArray, self.objects_detected_callback)
-    self.objects_pub = rospy.Publisher('/object_manager/object_names', ObjectArray, queue_size=10, latch=True)
-    self.navigate_to_object_service = rospy.Service('/object_manager/navigate_to_object', NavigateToObject, self.navigate_to_object)
-
-    self.move_base_client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
-    self.move_base_client.wait_for_server()
-
-  def navigate_to_object(self, req):
-    print(req)
-
-    if req.object_name in self.object_dict:
-      goal = MoveBaseGoal()
-      goal.target_pose = PoseStamped()
-      goal.target_pose.pose = self.object_dict[req.object_name][0]
-      goal.target_pose.header.stamp = rospy.Time(0)
-      goal.target_pose.header.frame_id = 'map'
-      goal.target_pose.pose.position.z = 0
-      goal.target_pose.pose.orientation.x = 0
-      goal.target_pose.pose.orientation.y = 0
-      goal.target_pose.pose.orientation.z = 0
-      goal.target_pose.pose.orientation.w = 1
-      self.move_base_client.send_goal(goal)
-      return True
+    self.objects_pub = rospy.Publisher('/object_manager/object_names', ObjectNames, queue_size=10, latch=True)
     
-    return False
-
-  def get_pose_in_map(self, marker):
+  def get_position_in_map(self, marker):
     try:
       transform = self.tf_buffer.lookup_transform('map', marker.header.frame_id[1:], rospy.Time(0), rospy.Duration(1.0))
       p = PoseStamped()
@@ -56,20 +30,19 @@ class ObjectManager():
       p.pose = marker.pose
       p_in_map = tf2_geometry_msgs.do_transform_pose(p, transform)
 
-      return p_in_map.pose
+      return p_in_map.pose.position
     except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
       pass
 
   def objects_detected_callback(self, msg):
-    rospy.logwarn_throttle(5, self.object_dict)
     for marker in msg.markers:
       if marker.text not in self.object_dict.keys():
-        self.object_dict[marker.text] = [self.get_pose_in_map(marker)]
+        self.object_dict[marker.text] = [self.get_position_in_map(marker)]
       else:
-        p_in_map = self.get_pose_in_map(marker)
+        p_in_map = self.get_position_in_map(marker)
         replaced = False
         for i in range(len(self.object_dict[marker.text])):
-          if position_distance(self.object_dict[marker.text][i].position, p_in_map.position) < ObjectManager.POSITION_TOLERANCE:
+          if position_distance(self.object_dict[marker.text][i], p_in_map) < ObjectManager.POSITION_TOLERANCE:
             self.object_dict[marker.text][i] = p_in_map
             replaced = True
             break
