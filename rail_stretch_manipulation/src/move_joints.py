@@ -8,7 +8,8 @@ from sensor_msgs.msg import JointState
 from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryGoal
 from trajectory_msgs.msg import JointTrajectoryPoint
 from rail_stretch_manipulation.msg import jointPosition
-        
+from rail_stretch_manipulation.srv import set_joint_state,set_joint_stateResponse
+
 class JointController(object):
 
     def __init__(self):
@@ -29,20 +30,17 @@ class JointController(object):
         
         self.trajectory_client.send_goal(trajectory_goal)
 
-        #if (wait):
-        #    self.trajectory_client.wait_for_result()
-
-
-class FixedCartersianMoveAction(object):
+class jointControl(object):
 
     def __init__(self):
-        rospy.Subscriber('joint_state', jointPosition, self.fixed_cartesian_move_callback)
+        rospy.Service("set_joint_state", set_joint_state, self.service_callback)
         self.joint_controller = JointController()
 
-    def fixed_cartesian_move_callback(self, data):
-        self.joint_controller.set_cmd(data.joint_name, data.joint_value, False)
+    def service_callback(self, request):
+        self.joint_controller.set_cmd(request.joint_name, request.joint_value, False)
+        return set_joint_stateResponse(True)
 
 if __name__ == "__main__":
     rospy.init_node('joint_control')
-    fixed_cartesian_move_action = FixedCartersianMoveAction()
+    joint_control = jointControl()
     rospy.spin()

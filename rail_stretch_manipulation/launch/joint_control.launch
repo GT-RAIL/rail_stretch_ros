@@ -1,0 +1,3 @@
+<launch>
+    <node ns="joint_control" name="controller" pkg="rail_stretch_manipulation" type="move_joints.py"/>
+</launch>
