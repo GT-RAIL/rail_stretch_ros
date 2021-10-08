@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#! /usr/bin/env python2.7
 import rospy
 import math
 import rospy
@@ -38,12 +38,14 @@ class ObjectManager():
 
       return point_stamped
     except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
-      pass
+      rospy.logerr_throttle_identical(5, 'object_manager: Cannot get point in map frame.')
 
   def objects_detected_callback(self, msg):
     for marker in msg.markers:
       if marker.text not in self.object_dict.keys():
-        self.object_dict[marker.text] = [self.get_point_in_map(marker)]
+        point_stamped = self.get_point_in_map(marker)
+        if point_stamped is not None:
+          self.object_dict[marker.text] = [point_stamped]
       else:
         point_stamped = self.get_point_in_map(marker)
         replaced = False
@@ -63,7 +65,9 @@ class ObjectManager():
   def get_object_position_handler(self, req):
     if req.object_name in self.object_dict:
       response = GetObjectPositionResponse()
-      response.object_position
+      response.object_position = self.object_dict[req.object_name][0]
+
+      return response
         
 
 if __name__ == '__main__':
