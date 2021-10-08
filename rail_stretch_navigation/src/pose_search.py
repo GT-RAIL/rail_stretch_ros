@@ -9,13 +9,13 @@ from occupancy_grid_python import OccupancyGridManager
 
 class PoseSearch():
   SEARCH_DIRECTIONS = 8
-  MAX_ITERATIONS = 3
-  SEARCH_STEP_DISTANCE = 0.5 # meters
-  SEARCH_START_DISTANCE = 0.5 # meters
+  MAX_ITERATIONS = 20
+  SEARCH_STEP_DISTANCE = 0.05 # meters
+  SEARCH_START_DISTANCE = 0.05 # meters
   FOOTPRINT = 0.2 # meters
 
   def __init__(self):
-    self.search_service = rospy.Service('/pose_search/search', GetValidPose, self.search_handler)
+    self.search_service = rospy.Service('/pose_search/get_valid_pose', GetValidPose, self.search_handler)
     self.ogm = OccupancyGridManager('/move_base/global_costmap/costmap', subscribe_to_updates=True)
 
   def search_handler(self, req):
@@ -55,13 +55,13 @@ class PoseSearch():
         ros_quat.x, ros_quat.y, ros_quat.z, ros_quat.w = quat
 
         search_pose = PoseStamped()
-        search_pose.header.frame_id = '/map'
+        search_pose.header.frame_id = 'map'
         search_pose.header.stamp = rospy.Time(0)
         search_pose.pose.position = search_point
         search_pose.pose.orientation = ros_quat
 
         search_poses.append(search_pose)
-
+        search_poses.reverse()
     return search_poses
 
   def get_valid_pose(self, search_poses):
