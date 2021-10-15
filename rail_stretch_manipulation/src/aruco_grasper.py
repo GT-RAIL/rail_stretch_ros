@@ -4,19 +4,43 @@ import math
 
 import tf2_ros
 import tf2_geometry_msgs
+from std_srvs.srv import Trigger
 from geometry_msgs.msg import PoseStamped
-from joint_controller import JointController
+from joint_controller import JointController, Joints
 from visualization_msgs.msg import MarkerArray
 
 class ArucoGrasper(object):
     MARKER_ID = 0
+    MIN_LIFT = 0.3
+    MAX_LIFT = 1.09
+    MIN_WRIST_EXTENSION = 0.01
+    MAX_WRIST_EXTENSION = 0.5
 
     def __init__(self):
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
         self.joint_controller = JointController()
-        self.joint_controller.set_cmd(joint_names=['joint_wrist_yaw', 'joint_head_pan', 'joint_head_tilt'], values=[0, -math.pi / 3, -math.pi / 6], wait=True)
+        self.joint_controller.set_cmd(joints=[
+            Joints.joint_wrist_yaw,
+            Joints.joint_head_pan,
+            Joints.joint_head_tilt,
+            Joints.gripper_aperture,
+            Joints.wrist_extension,
+            Joints.joint_lift
+            ],
+            values=[math.pi, 0, 0, 0, ArucoGrasper.MIN_WRIST_EXTENSION, ArucoGrasper.MIN_LIFT], # gripper stowed, camera facing forward, camera horizontal to floor, gripper close
+            wait=True)
+        self.joint_controller.set_cmd(joints=[
+            Joints.joint_wrist_yaw,
+            Joints.joint_head_pan,
+            Joints.joint_head_tilt,
+            Joints.gripper_aperture
+            ],
+            values=[0, -math.pi / 2, -math.pi/6, 0.0445], # gripper facing right, camera facing right, camera tilted towards floor, gripper open
+            wait=True)
         rospy.Subscriber('/aruco/marker_array', MarkerArray, self.aruco_detected_callback)
+        self.switch_base_to_manipulation = rospy.ServiceProxy('/switch_to_manipulation_mode', Trigger)
+        self.switch_base_to_manipulation()
 
     def get_displacement(self, marker):
         try:
@@ -37,13 +61,15 @@ class ArucoGrasper(object):
         for marker in msg.markers:
             if marker.id == ArucoGrasper.MARKER_ID:
                 displacement = self.get_displacement(marker)
-                self.joint_controller.set_cmd(joint_names=[
-                        'joint_lift',
-                        'wrist_extension'
+                self.joint_controller.set_cmd(joints=[
+                        Joints.joint_lift,
+                        Joints.wrist_extension,
+                        Joints.joint_mobile_base_translation
                     ],
                     values=[
-                        self.joint_controller.joint_states.position[1] + displacement.z,
-                        self.joint_controller.joint_states.position[0] + displacement.x
+                        self.joint_controller.joint_states.position[Joints.joint_lift.value] + displacement.z,
+                        self.joint_controller.joint_states.position[Joints.wrist_extension.value] + displacement.x,
+                        displacement.y + 0.03
                     ],
                     wait=False)
 

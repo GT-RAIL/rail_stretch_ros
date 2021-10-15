@@ -1,0 +1,4 @@
+<launch>
+    <include file="$(find rail_stretch_config)/launch/rail_stretch_bringup.launch" />
+    <include file="$(find rail_stretch_manipulation)/launch/aruco_grasper.launch" />
+</launch>
