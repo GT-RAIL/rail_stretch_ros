@@ -4,7 +4,7 @@ import math
 import rospy
 import tf2_ros
 import tf2_geometry_msgs
-from visualization_msgs.msg import MarkerArray
+from visualization_msgs.msg import MarkerArray, Marker
 from geometry_msgs.msg import PoseStamped, PointStamped
 from rail_stretch_perception.msg import ObjectNames
 from rail_stretch_perception.srv import GetObjectPosition, GetObjectPositionResponse
@@ -20,7 +20,8 @@ class ObjectManager():
     self.tf_buffer = tf2_ros.Buffer()
     self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
     rospy.Subscriber('/objects/marker_array', MarkerArray, self.objects_detected_callback)
-    self.object_names_pub = rospy.Publisher('/object_manager/object_names', ObjectNames, queue_size=10, latch=True)
+    self.object_names_pub = rospy.Publisher('/object_manager/object_names', ObjectNames, queue_size=1, latch=True)
+    self.object_markers_pub = rospy.Publisher('/object_manager/object_markers', MarkerArray, queue_size=1, latch=True)
     self.get_object_position_service = rospy.Service('/object_manager/get_object_position', GetObjectPosition, self.get_object_position_handler)
     
   def get_point_in_map(self, marker):
@@ -61,6 +62,34 @@ class ObjectManager():
     object_names = ObjectNames()
     object_names.object_names = self.object_dict.keys()
     self.object_names_pub.publish(object_names)
+
+    object_markers = MarkerArray()
+    markers = []
+
+    i = 0
+    for object_name, object_positions in self.object_dict.items():
+      marker = Marker()
+      marker.id = i
+      i += 1
+
+      marker.scale.x = 0.35
+      marker.scale.y = 0.35
+      marker.scale.z = 0.35
+
+      marker.color.g = 125
+      marker.color.b = 255
+      marker.color.a = 255
+
+      marker.header = object_positions[0].header
+      marker.pose.position = object_positions[0].point
+      marker.pose.orientation.w = 1
+      marker.type = Marker.SPHERE
+
+      markers.append(marker)
+
+    object_markers.markers = markers
+
+    self.object_markers_pub.publish(object_markers)
 
   def get_object_position_handler(self, req):
     if req.object_name in self.object_dict:

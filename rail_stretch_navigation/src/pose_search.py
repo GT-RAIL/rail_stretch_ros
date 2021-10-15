@@ -6,6 +6,7 @@ from geometry_msgs.msg import Point, PoseStamped, Quaternion
 from tf.transformations import quaternion_from_euler
 from rail_stretch_navigation.srv import GetValidPose, GetValidPoseResponse
 from occupancy_grid_python import OccupancyGridManager
+from visualization_msgs.msg import MarkerArray, Marker
 
 class PoseSearch():
   SEARCH_DIRECTIONS = 8
@@ -16,7 +17,8 @@ class PoseSearch():
 
   def __init__(self):
     self.search_service = rospy.Service('/pose_search/get_valid_pose', GetValidPose, self.search_handler)
-    self.ogm = OccupancyGridManager('/move_base/global_costmap/costmap', subscribe_to_updates=True)
+    self.ogm = OccupancyGridManager('/map', subscribe_to_updates=True)
+    self.search_markers_pub = rospy.Publisher('/pose_search/search_markers', MarkerArray, queue_size=1, latch=1)
 
   def search_handler(self, req):
     search_poses = self.get_search_poses(req.target_point)
@@ -36,7 +38,9 @@ class PoseSearch():
     search_step_rad = np.deg2rad(search_step_deg)
 
     search_poses = []
+    markers = []
 
+    i = 0
     for iteration in range(1, PoseSearch.MAX_ITERATIONS + 1):
       length_v = np.array([0, PoseSearch.SEARCH_START_DISTANCE + PoseSearch.SEARCH_STEP_DISTANCE * iteration])
       for direction in range(PoseSearch.SEARCH_DIRECTIONS):
@@ -47,6 +51,8 @@ class PoseSearch():
         search_v = np.dot(rot_mat, length_v)
 
         search_point.x, search_point.y = search_v
+        search_point.x += target_point.x
+        search_point.y += target_point.y
         
         angle_to_target = atan2(target_point.y - search_point.y, target_point.x - search_point.x)
         
@@ -61,7 +67,26 @@ class PoseSearch():
         search_pose.pose.orientation = ros_quat
 
         search_poses.append(search_pose)
-        search_poses.reverse()
+
+        marker = Marker()
+        marker.id = i
+        i += 1
+        marker.header = search_pose.header
+        marker.pose = search_pose.pose
+
+        marker.color.g = 125
+        marker.color.b = 255
+        marker.color.a = 125
+
+        marker.scale.x = 0.35
+        marker.scale.y = 0.0625
+        marker.scale.z = 0.0625
+
+        markers.append(marker)
+
+    msg = MarkerArray()
+    msg.markers = markers
+    self.search_markers_pub.publish(msg)
     return search_poses
 
   def get_valid_pose(self, search_poses):

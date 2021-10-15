@@ -6,13 +6,15 @@
     <include file="$(find stretch_core)/launch/rplidar.launch" />
 
     <!-- REALSENSE D435i -->
-    <include file="$(find stretch_core)/launch/d435i_high_resolution.launch"></include>
+    <include file="$(find stretch_core)/launch/d435i_high_resolution.launch" />
     <node name="d435i_configure" pkg="stretch_core" type="d435i_configure">
       <param name="initial_mode" type="string" value="High Accuracy"/>
     </node>
     <!-- -->
 
-    <node name="keyboard_teleop" pkg="stretch_core" type="keyboard_teleop" output="screen"/>
+    <include file="$(find stretch_core)/launch/teleop_twist.launch" />
+
+    <!-- <node name="keyboard_teleop" pkg="stretch_core" type="keyboard_teleop" output="screen"/> -->
     <!-- <remap from="/cmd_vel" to="/stretch/cmd_vel" />
     <node name="teleop_twist_keyboard" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard" output="screen"/> -->
 </launch>
