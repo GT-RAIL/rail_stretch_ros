@@ -15,7 +15,7 @@
   '0':
     'length_mm': 47
     'use_rgb_only': False
-    'name': 'base_left'
+    'name': 'Object 1'
     'link': None
   'default':
     'length_mm': 24
