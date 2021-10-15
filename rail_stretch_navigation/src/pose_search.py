@@ -12,7 +12,7 @@ class PoseSearch():
   SEARCH_DIRECTIONS = 8
   MAX_ITERATIONS = 20
   SEARCH_STEP_DISTANCE = 0.05 # meters
-  SEARCH_START_DISTANCE = 0.05 # meters
+  SEARCH_START_DISTANCE = 0.45 # meters
   FOOTPRINT = 0.2 # meters
 
   def __init__(self):
