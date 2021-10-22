@@ -5,7 +5,7 @@ from trajectory_msgs.msg import JointTrajectoryPoint
 from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryGoal
 from sensor_msgs.msg import JointState
 import actionlib
-
+from time import sleep
 import rospy
 
 class Joints(Enum):
@@ -58,4 +58,7 @@ class JointController(object):
         self.trajectory_client.send_goal(trajectory_goal)
 
         if (wait):
-            self.trajectory_client.wait_for_result()
+            if len(joint_names)==1 and joint_names[0]=="gripper_aperture":
+                sleep(2)
+            else:
+                self.trajectory_client.wait_for_result(rospy.Duration(5.0))
