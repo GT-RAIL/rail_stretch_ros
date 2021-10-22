@@ -7,6 +7,7 @@ import actionlib
 from actionlib_msgs.msg import GoalStatus
 from rail_stretch_manipulation.joint_controller import JointController, Joints
 from sensor_msgs.msg import JointState
+from rail_stretch_state.srv import stretch_mission,stretch_missionResponse
 class stretchState():
     def __init__(self):
         self.STATE = "WAITING"
@@ -36,15 +37,30 @@ class stretchState():
             rospy.signal_shutdown("Action server not available!")
             #return
         rospy.loginfo("Connected to move base server")
-        self.i = 10
         self.lift_state = None
-        self.grasp_object = False
-        self.drop_object = True
+        self.grasp_object = None
+        self.drop_object = None
         self.joint_controller = JointController()
-        rospy.Subscriber('/stretch_state/goal', PoseStamped, self.goal_callback)
+        #rospy.Subscriber('/stretch_state/goal', PoseStamped, self.goal_callback)
         rospy.Subscriber('/stretch/joint_states', JointState, self.joint_states_callback)
+        service = rospy.Service("stretch_mission",stretch_mission,self.service_server)
         #self.timer = rospy.Timer(rospy.Duration(0.1), self.state_callback)
         #Service server for input pose and target pose with respect to aruco
+    
+    def service_server(self,request):
+        if request.mode == "grasping":
+            self.grasp_object = True
+        elif request.mode == "dropping":
+            self.drop_object = True
+        self.STATE = "NAVIGATION"
+        goal = MoveBaseGoal()
+        goal.target_pose = PoseStamped()
+        goal.target_pose = request.goal
+        self.move_base_client.send_goal(goal,self.done_cb, self.active_cb, self.feedback_cb)
+        server_response = stretch_missionResponse()
+        server_response.response = "Mission set successfully"
+        server_response.result = True
+        return server_response
     
     def done_cb(self,status,result):
         rospy.loginfo("Action server done executing")
@@ -56,6 +72,7 @@ class stretchState():
             trigger_request = TriggerRequest() 
             trigger_result = self.trigger_grasp_object_service(trigger_request)
             rospy.loginfo('trigger_result = {0}'.format(trigger_result))
+            self.grasp_object = False
             self.STATE = "WAITING"
         elif self.drop_object == True:
             trigger_request = TriggerRequest() 
@@ -71,6 +88,7 @@ class stretchState():
             
             self.joint_controller.set_cmd(joints=[Joints.joint_gripper_finger_left],values=[0.1],wait=True)
             self.joint_controller.set_cmd(joints=[Joints.wrist_extension, Joints.joint_lift, Joints.joint_gripper_finger_left],values=[0,0.9,-0.07],wait=True)
+            self.drop_object = False
             self.STATE = "WAITING"
 
     def joint_states_callback(self,joint_states):
@@ -81,8 +99,8 @@ class stretchState():
         rospy.loginfo("Running action")
     
     def feedback_cb(self,feedback):
-        print("Feedback" + str(feedback))
-
+        rospy.logdebug(str(feedback))
+    '''
     def goal_callback(self, msg):
         self.STATE = "NAVIGATION"
         goal = MoveBaseGoal()
@@ -90,10 +108,10 @@ class stretchState():
         goal.target_pose = msg
         self.move_base_client.send_goal(goal,self.done_cb, self.active_cb, self.feedback_cb)
 
-    #def state_callback(self, timer):
+    def state_callback(self, timer):
         
-        #if self.STATE == "NAVIGATION"
-        '''if self.i==1:
+        if self.STATE == "NAVIGATION"
+        if self.i==1:
             trigger_request = TriggerRequest() 
             trigger_result = self.trigger_grasp_object_service(trigger_request)
             rospy.loginfo('trigger_result = {0}'.format(trigger_result))
