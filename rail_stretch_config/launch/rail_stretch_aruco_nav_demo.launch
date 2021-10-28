@@ -1,0 +1,6 @@
+<launch>
+  <include file="$(find rail_stretch_config)/launch/rail_stretch_bringup.launch"/>
+  <include file="$(find rail_stretch_navigation)/launch/navigation.launch"/>
+  <include file="$(find rail_stretch_perception)/launch/aruco_manager.launch"/>
+  <node name="navigate_to_aruco_action" pkg="rail_stretch_navigation" type="navigate_to_aruco_action.py" output="screen"/>
+</launch>

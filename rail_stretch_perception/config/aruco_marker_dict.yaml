@@ -1,0 +1,54 @@
+# examples of command line use
+# rosparam load ./stretch_marker_dict.yaml
+# rosparam list
+# rosparam get /aruco_markers/
+
+# Be careful with length_mm values. Stickers and printouts can vary
+# significantly from your expectations. You should measure them
+# directly. For example, in a prototype robot the stickers were closer
+# to 23mm wide than 24mm. This 1mm difference resulted in > 1cm of
+# error in the depths for the marker pose estimates when only using
+# RGB images.
+
+
+'aruco_marker_info': 
+  '0':
+    'length_mm': 200
+    'use_rgb_only': False
+    'name': 'tall_table'
+    'link': None
+  '1':
+    'length_mm': 200
+    'use_rgb_only': False
+    'name': 'kitchen_counter'
+    'link': None
+  '2':
+    'length_mm': 200
+    'use_rgb_only': False
+    'name': 'short_table'
+    'link': None
+    'x_offset' : 0
+    'y_offset' : -0.7
+    'alignment_axis': 'x'
+    'flip_alignment': True
+  '3':
+    'length_mm': 200
+    'use_rgb_only': False
+    'name': 'test_3'
+    'link': None
+  '4':
+    'length_mm': 65
+    'use_rgb_only': False
+    'name': 'test_4'
+    'link': None
+  '5':
+    'length_mm': 65
+    'use_rgb_only': False
+    'name': 'test_5'
+    'link': None
+  'default':
+    'length_mm': 24
+    'use_rgb_only': False
+    'name': 'unknown'
+    'link': None
+    
