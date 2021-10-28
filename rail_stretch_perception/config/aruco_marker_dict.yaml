@@ -13,9 +13,36 @@
 
 'aruco_marker_info': 
   '0':
-    'length_mm': 47
+    'length_mm': 200
     'use_rgb_only': False
-    'name': 'Object 1'
+    'name': 'tall_table'
+    'link': None
+  '1':
+    'length_mm': 200
+    'use_rgb_only': False
+    'name': 'kitchen_counter'
+    'link': None
+  '2':
+    'length_mm': 200
+    'use_rgb_only': False
+    'name': 'short_table'
+    'link': None
+    'x_offset' : 0.3
+    'y_offset' : 0.3
+  '3':
+    'length_mm': 200
+    'use_rgb_only': False
+    'name': 'test_3'
+    'link': None
+  '4':
+    'length_mm': 65
+    'use_rgb_only': False
+    'name': 'test_4'
+    'link': None
+  '5':
+    'length_mm': 65
+    'use_rgb_only': False
+    'name': 'test_5'
     'link': None
   'default':
     'length_mm': 24

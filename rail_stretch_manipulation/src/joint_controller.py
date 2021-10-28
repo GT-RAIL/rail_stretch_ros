@@ -20,8 +20,9 @@ class Joints(Enum):
     joint_wrist_yaw = 8
     joint_gripper_finger_left = 9
     joint_gripper_finger_right = 10
-    joint_mobile_base_translation = 11
-    gripper_aperture = None
+    translate_mobile_base = "translate_mobile_base"
+    rotate_mobile_base = "rotate_mobile_base"
+    gripper_aperture = "gripper_aperture"
 
 
 class JointController(object):

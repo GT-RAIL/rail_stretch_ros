@@ -1,0 +1,3 @@
+string aruco_id
+---
+bool sent_goal

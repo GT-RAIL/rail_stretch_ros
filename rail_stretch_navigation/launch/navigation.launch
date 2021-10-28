@@ -18,7 +18,7 @@
     <rosparam command="load" file="$(find rail_stretch_navigation)/config/gmapping_params.yaml" />
   </node>
 
-  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base">
     <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS" />
     <rosparam file="$(find rail_stretch_navigation)/config/common_costmap_params.yaml" command="load" />
     <!-- <rosparam file="$(find rail_stretch_navigation)/config/common_costmap_params.yaml" command="load" ns="local_costmap" /> -->

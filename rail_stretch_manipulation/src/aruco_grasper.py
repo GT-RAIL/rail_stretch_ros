@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
 import math
 
@@ -39,12 +39,12 @@ class ArucoGrasper(object):
             values=[0, -math.pi / 2, -math.pi/6, 0.0445], # gripper facing right, camera facing right, camera tilted towards floor, gripper open
             wait=True)
         rospy.Subscriber('/aruco/marker_array', MarkerArray, self.aruco_detected_callback)
-        self.switch_base_to_manipulation = rospy.ServiceProxy('/switch_to_manipulation_mode', Trigger)
+        self.switch_base_to_manipulation = rospy.ServiceProxy('/switch_to_position_mode', Trigger)
         self.switch_base_to_manipulation()
 
     def get_displacement(self, marker):
         try:
-            transform = self.tf_buffer.lookup_transform('link_grasp_center', marker.header.frame_id[1:], rospy.Time(0), rospy.Duration(1.0))
+            transform = self.tf_buffer.lookup_transform('link_grasp_center', marker.header.frame_id, rospy.Time(0), rospy.Duration(1.0))
             p = PoseStamped()
             p.header.frame_id = marker.header.frame_id
             p.header.stamp = rospy.Time(0)
@@ -55,21 +55,22 @@ class ArucoGrasper(object):
             return p_in_grasp_frame.pose.position
 
         except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
-            rospy.logerr_throttle_identical(5, 'aruco_grasper: ERROR')
+            print('aruco_grasper: ERROR')
 
     def aruco_detected_callback(self, msg):
         for marker in msg.markers:
+            print(marker.id, 'found')
             if marker.id == ArucoGrasper.MARKER_ID:
                 displacement = self.get_displacement(marker)
                 self.joint_controller.set_cmd(joints=[
                         Joints.joint_lift,
                         Joints.wrist_extension,
-                        Joints.joint_mobile_base_translation
+                        Joints.translate_mobile_base
                     ],
                     values=[
                         self.joint_controller.joint_states.position[Joints.joint_lift.value] + displacement.z,
                         self.joint_controller.joint_states.position[Joints.wrist_extension.value] + displacement.x,
-                        displacement.y + 0.03
+                        displacement.y
                     ],
                     wait=False)
 
