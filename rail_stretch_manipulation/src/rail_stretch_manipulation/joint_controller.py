@@ -37,6 +37,13 @@ class JointController(object):
     def joint_states_callback(self, data):
         self.joint_states = data
 
+    def place_object(self):
+        self.set_cmd(joints=[Joints.gripper_aperture],values=[0.0445],wait=True)
+        self.set_cmd(joints=[Joints.wrist_extension, Joints.joint_lift, Joints.gripper_aperture],values=[0,0.9,0],wait=True)
+    
+    def extend_arm(self):
+        self.set_cmd(joints=[Joints.wrist_extension],values=[0.3],wait=True)
+    
     def set_cmd(self, joints, values, wait):
         point = JointTrajectoryPoint()
         point.time_from_start = rospy.Duration(0.0)
