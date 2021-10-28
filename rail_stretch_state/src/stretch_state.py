@@ -1,16 +1,24 @@
 #!/usr/bin/env python3
+from enum import Enum
 import rospy
 from std_srvs.srv import Trigger, TriggerRequest
 from geometry_msgs.msg import PoseStamped
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+from rail_stretch_navigation.srv import NavigateToArucoRequest
 import actionlib
 from actionlib_msgs.msg import GoalStatus
 from rail_stretch_manipulation.joint_controller import JointController, Joints
 from sensor_msgs.msg import JointState
-from rail_stretch_state.srv import stretch_mission,stretch_missionResponse
-class stretchState():
+from rail_stretch_state.srv import stretch_mission, stretch_missionResponse
+
+class States(Enum):
+    WAITING = 0
+    GRASPING = 1
+    DROPPING = 2
+
+class StretchState():
     def __init__(self):
-        self.STATE = "WAITING"
+        self.STATE = States.WAITING
         self.rate = 10.0
 
         rospy.wait_for_service('/grasp_object/trigger_grasp_object')
@@ -26,28 +34,21 @@ class stretchState():
         self.switch_to_navigation_mode_service = rospy.ServiceProxy('/switch_to_navigation_mode', Trigger)
 
         rospy.wait_for_service('/switch_to_position_mode')
-        rospy.loginfo(' Connected to /switch_to_position_mode')
+        rospy.loginfo('Connected to /switch_to_position_mode')
         self.switch_to_position_mode_service = rospy.ServiceProxy('/switch_to_position_mode', Trigger)
+
+        rospy.wait_for_service('/navigate_to_aruco_action/navigate_to_aruco')
+        rospy.loginfo('Connected to /navigate_to_aruco_action/navigate_to_aruco')
+        self.navigate_to_aruco_service = rospy.ServiceProxy('/navigate_to_aruco_action/navigate_to_aruco', Trigger)
         
-        self.move_base_client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
-        wait = self.move_base_client.wait_for_server(rospy.Duration(5.0))
-        rospy.loginfo("Waiting for move_base action server...")
-        if not wait:
-            rospy.logerr("Action server not available!")
-            rospy.signal_shutdown("Action server not available!")
-            #return
-        rospy.loginfo("Connected to move base server")
         self.lift_state = None
         self.grasp_object = None
         self.drop_object = None
         self.joint_controller = JointController()
-        #rospy.Subscriber('/stretch_state/goal', PoseStamped, self.goal_callback)
         rospy.Subscriber('/stretch/joint_states', JointState, self.joint_states_callback)
-        service = rospy.Service("stretch_mission",stretch_mission,self.service_server)
-        #self.timer = rospy.Timer(rospy.Duration(0.1), self.state_callback)
-        #Service server for input pose and target pose with respect to aruco
+        rospy.Service("stretch_mission", stretch_mission, self.service_server)
     
-    def service_server(self,request):
+    def service_server(self, request):
         if request.mode == "grasping":
             self.grasp_object = True
         elif request.mode == "dropping":
@@ -56,16 +57,15 @@ class stretchState():
         trigger_request = TriggerRequest() 
         trigger_result = self.switch_to_navigation_mode_service(trigger_request)
         rospy.loginfo('trigger_result = {0}'.format(trigger_result))
-        goal = MoveBaseGoal()
-        goal.target_pose = PoseStamped()
-        goal.target_pose = request.goal
-        self.move_base_client.send_goal(goal,self.done_cb, self.active_cb, self.feedback_cb)
+        navigate_to_arcuo_goal = NavigateToArucoRequest()
+        navigate_to_arcuo_goal.aruco_name = request.aruco_name
+        self.navigate_to_aruco_service(navigate_to_arcuo_goal)
         server_response = stretch_missionResponse()
         server_response.response = "Mission set successfully"
         server_response.result = True
         return server_response
     
-    def done_cb(self,status,result):
+    def done_cb(self, status, result):
         rospy.loginfo("Action server done executing")
         if self.grasp_object == True:
             trigger_request = TriggerRequest() 
@@ -109,7 +109,7 @@ class stretchState():
 if __name__ == '__main__':
     try:
         rospy.init_node('stretch_state')
-        node = stretchState()
+        node = StretchState()
         rospy.spin()
     except KeyboardInterrupt:
         rospy.loginfo('shutting down')

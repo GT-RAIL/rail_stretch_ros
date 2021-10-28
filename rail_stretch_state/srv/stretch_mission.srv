@@ -1,5 +1,5 @@
 string mode
-geometry_msgs/PoseStamped goal
+string aruco_name
 ---
 bool result
 string response

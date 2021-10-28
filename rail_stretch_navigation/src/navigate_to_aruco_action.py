@@ -32,6 +32,12 @@ class NavigateToArucoAction:
 
     self.move_base_client.wait_for_server()
 
+    self.aruco_data = rospy.get_param('/aruco_marker_info')
+    self.aruco_names = {}
+
+    for aruco_id, aruco_datum in self.aruco_data.items():
+      self.aruco_names[aruco_datum['name']] = aruco_id
+
   def get_aruco_param(self, param_name, aruco_id, default=None):
     if not default:
       return rospy.get_param('/aruco_marker_info/{}/{}'.format(aruco_id, param_name))
@@ -39,17 +45,18 @@ class NavigateToArucoAction:
     return rospy.get_param('/aruco_marker_info/{}/{}'.format(aruco_id, param_name), default=default)
 
   def navigate_to_aruco(self, req):
-    rospy.logwarn('NAVIGATE TO ARUCO WITH ID: {}'.format(req.aruco_id))
-    params = rospy.get_param('/aruco_marker_info/{}'.format(req.aruco_id))
+    aruco_id = self.aruco_names[req.aruco_name]
+    rospy.logwarn('NAVIGATE TO ARUCO WITH ID: {}'.format(aruco_id))
+    params = rospy.get_param('/aruco_marker_info/{}'.format(aruco_id))
 
     if params:
-      x_offset = self.get_aruco_param('x_offset', req.aruco_id, default=0)
-      y_offset = self.get_aruco_param('y_offset', req.aruco_id, default=0)
-      name = self.get_aruco_param('name', req.aruco_id)
+      x_offset = self.get_aruco_param('x_offset', aruco_id, default=0)
+      y_offset = self.get_aruco_param('y_offset', aruco_id, default=0)
+      name = self.get_aruco_param('name', aruco_id)
 
       try:
-        alignment_axis = self.get_aruco_param('alignment_axis', req.aruco_id, 'x')
-        flip_alignment = self.get_aruco_param('flip_alignment', req.aruco_id, default=False)
+        alignment_axis = self.get_aruco_param('alignment_axis', aruco_id, 'x')
+        flip_alignment = self.get_aruco_param('flip_alignment', aruco_id, default=False)
         
         transform = self.tf_buffer.lookup_transform('map', name + '_static', rospy.Time(0), rospy.Duration(10.0))
         p = PoseStamped()
