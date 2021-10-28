@@ -1,5 +1,4 @@
 #! /usr/bin/env python3
-from ctypes import alignment
 import math
 import rospy
 import actionlib
@@ -81,7 +80,7 @@ class NavigateToArucoAction:
         goal = MoveBaseGoal()
         goal.target_pose = p_in_map_frame
 
-        self.move_base_client.send_goal(goal)
+        self.move_base_client.send_goal_and_wait(goal)
         return True
 
       except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
