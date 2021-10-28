@@ -27,8 +27,10 @@
     'use_rgb_only': False
     'name': 'short_table'
     'link': None
-    'x_offset' : 0.3
-    'y_offset' : 0.3
+    'x_offset' : 0
+    'y_offset' : -0.3
+    'alignment_axis': 'x'
+    'flip_alignment': True
   '3':
     'length_mm': 200
     'use_rgb_only': False

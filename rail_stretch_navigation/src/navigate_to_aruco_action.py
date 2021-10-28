@@ -1,11 +1,28 @@
 #! /usr/bin/env python3
+from ctypes import alignment
+import math
 import rospy
 import actionlib
 import tf2_ros
 import tf2_geometry_msgs
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, Quaternion
 from rail_stretch_navigation.srv import NavigateToAruco
+from tf.transformations import euler_from_quaternion, quaternion_from_euler
+
+def euler_from_ros_quaternion(quaterion):
+  return euler_from_quaternion([quaterion.x, quaterion.y, quaterion.z, quaterion.w])
+
+def ros_quaternion_from_euler(x, y, z):
+  (x, y, z, w) = quaternion_from_euler(x, y, z)
+
+  quaternion = Quaternion()
+  quaternion.x = x
+  quaternion.y = y
+  quaternion.z = z
+  quaternion.w = w
+
+  return quaternion
 
 class NavigateToArucoAction:
   def __init__(self):
@@ -32,16 +49,34 @@ class NavigateToArucoAction:
       name = self.get_aruco_param('name', req.aruco_id)
 
       try:
-        transform = self.tf_buffer.lookup_transform('map', name, rospy.Time(0), rospy.Duration(10.0))
+        alignment_axis = self.get_aruco_param('alignment_axis', req.aruco_id, 'x')
+        flip_alignment = self.get_aruco_param('flip_alignment', req.aruco_id, default=False)
+        
+        transform = self.tf_buffer.lookup_transform('map', name + '_static', rospy.Time(0), rospy.Duration(10.0))
         p = PoseStamped()
         p.header.frame_id = name
         p.header.stamp = rospy.Time(0)
         p.pose.position.x = x_offset
         p.pose.position.y = y_offset
         p.pose.orientation.w = 1
+        
+        if alignment_axis == 'x':
+          if flip_alignment:
+            p.pose.orientation = ros_quaternion_from_euler(0, 0, math.pi)
+          else:
+            p.pose.orientation = ros_quaternion_from_euler(0, 0, 0)
+        else:
+          if flip_alignment:
+            p.pose.orientation = ros_quaternion_from_euler(0, 0, math.pi / 2)
+          else:
+            p.pose.orientation = ros_quaternion_from_euler(0, 0, 1.5 * math.pi)
 
         p_in_map_frame = tf2_geometry_msgs.do_transform_pose(p, transform)
         p_in_map_frame.pose.position.z = 0
+
+        (e_x, e_y, e_z) = euler_from_ros_quaternion(p_in_map_frame.pose.orientation)
+
+        p_in_map_frame.pose.orientation = ros_quaternion_from_euler(0, 0, e_z)
 
         goal = MoveBaseGoal()
         goal.target_pose = p_in_map_frame
