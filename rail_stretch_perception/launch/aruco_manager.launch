@@ -3,6 +3,7 @@
   <!-- ARUCO MARKER DETECTOR -->
   <rosparam command="load" file="$(find rail_stretch_perception)/config/aruco_marker_dict.yaml" />
   <node name="detect_aruco_markers" pkg="stretch_core" type="detect_aruco_markers" output="screen"/>
+  <node name="aruco_manager" pkg="rail_stretch_perception" type="aruco_manager.py" output="screen"/>
   <!-- -->
 
 </launch>
