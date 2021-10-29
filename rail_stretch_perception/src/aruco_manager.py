@@ -1,11 +1,16 @@
 #! /usr/bin/env python3
 
 import rospy
+import math
 import tf2_ros
 from geometry_msgs.msg import TransformStamped
+from rail_stretch_manipulation.joint_controller import JointController, Joints
 
 class ArucoManager:
   def __init__(self) -> None:
+    self.joint_controller = JointController()
+    self.joint_controller.set_cmd([Joints.joint_head_tilt], [-math.pi / 8], wait=True)
+
     self.rate = rospy.Rate(10)
     self.broadcaster = tf2_ros.StaticTransformBroadcaster()
     self.tf_buffer = tf2_ros.Buffer()

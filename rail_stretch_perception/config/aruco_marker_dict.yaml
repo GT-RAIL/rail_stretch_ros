@@ -17,6 +17,10 @@
     'use_rgb_only': False
     'name': 'tall_table'
     'link': None
+    'x_offset' : 0.0
+    'y_offset' : 0.7
+    'alignment_axis': 'x'
+    'flip_alignment': False
   '1':
     'length_mm': 200
     'use_rgb_only': False
@@ -27,7 +31,7 @@
     'use_rgb_only': False
     'name': 'short_table'
     'link': None
-    'x_offset' : 0
+    'x_offset' : 0.0
     'y_offset' : -0.7
     'alignment_axis': 'x'
     'flip_alignment': True

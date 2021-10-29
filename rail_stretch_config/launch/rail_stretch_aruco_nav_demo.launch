@@ -11,5 +11,5 @@
   <node name="grasp_object" pkg="stretch_demos" type="grasp_object" output="screen">
     <param name="debug_directory" type="string" value="$(arg debug_directory)"/>
   </node>
-  <!-- <node name="stretch_state" pkg="rail_stretch_state" type="stretch_state.py" output="screen"/> -->
+  <node name="stretch_state" pkg="rail_stretch_state" type="stretch_state.py" output="screen"/>
 </launch>

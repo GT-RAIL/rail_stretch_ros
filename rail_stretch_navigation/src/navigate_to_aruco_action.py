@@ -5,6 +5,7 @@ import actionlib
 import tf2_ros
 import tf2_geometry_msgs
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+from actionlib_msgs.msg import GoalStatus
 from geometry_msgs.msg import PoseStamped, Quaternion
 from rail_stretch_navigation.srv import NavigateToAruco
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
@@ -87,8 +88,10 @@ class NavigateToArucoAction:
         goal = MoveBaseGoal()
         goal.target_pose = p_in_map_frame
 
-        self.move_base_client.send_goal_and_wait(goal)
-        return True
+        state = self.move_base_client.send_goal_and_wait(goal, execute_timeout=rospy.Duration(200), preempt_timeout=rospy.Duration(200))
+
+        if state == GoalStatus.SUCCEEDED:
+          return True
 
       except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
         rospy.logerr(e)
