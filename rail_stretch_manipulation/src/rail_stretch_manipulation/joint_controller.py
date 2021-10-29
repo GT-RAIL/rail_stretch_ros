@@ -38,8 +38,9 @@ class JointController(object):
         self.joint_states = data
 
     def place_object(self):
-        self.set_cmd(joints=[Joints.gripper_aperture],values=[0.0445],wait=True)
-        self.set_cmd(joints=[Joints.wrist_extension, Joints.joint_lift, Joints.gripper_aperture],values=[0,0.9,0],wait=True)
+        self.set_cmd(joints=[Joints.joint_lift], values=[self.joint_states.position[Joints.joint_lift.value] - 0.15], wait=True)
+        self.set_cmd(joints=[Joints.gripper_aperture], values=[0.0445], wait=True)
+        self.set_cmd(joints=[Joints.wrist_extension], values=[0.1], wait=True)
     
     def extend_arm(self):
         self.set_cmd(joints=[Joints.wrist_extension],values=[0.3],wait=True)
@@ -66,6 +67,6 @@ class JointController(object):
 
         if (wait):
             if len(joint_names)==1 and joint_names[0]=="gripper_aperture":
-                sleep(2)
+                rospy.sleep(rospy.Duration(2))
             else:
                 self.trajectory_client.wait_for_result(rospy.Duration(5.0))
