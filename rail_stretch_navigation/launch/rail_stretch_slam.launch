@@ -8,11 +8,11 @@
   </node>
 
   <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
-    <rosparam file="$(find stretch_navigation)/config/common_costmap_params.yaml" command="load" ns="global_costmap" />
-    <rosparam file="$(find stretch_navigation)/config/common_costmap_params.yaml" command="load" ns="local_costmap" />
-    <rosparam file="$(find stretch_navigation)/config/local_costmap_params.yaml" command="load" />
-    <rosparam file="$(find stretch_navigation)/config/global_costmap_params_nomap.yaml" command="load" />
-    <rosparam file="$(find stretch_navigation)/config/base_local_planner_params.yaml" command="load" />
+    <rosparam file="$(find rail_stretch_navigation)/config/common_costmap_params.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find rail_stretch_navigation)/config/common_costmap_params.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find rail_stretch_navigation)/config/local_costmap_params.yaml" command="load" />
+    <rosparam file="$(find rail_stretch_navigation)/config/global_costmap_params_nomap.yaml" command="load" />
+    <rosparam file="$(find rail_stretch_navigation)/config/teb_params.yaml" command="load" />
 
     <param name="base_local_planner" value="teb_local_planner/TebLocalPlannerROS" />
     <param name="controller_frequency" value="10.0" />
