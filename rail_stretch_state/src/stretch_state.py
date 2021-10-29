@@ -2,7 +2,7 @@
 from enum import Enum
 import rospy
 from std_srvs.srv import Trigger, TriggerRequest
-from rail_stretch_navigation.srv import NavigateToAruco, NavigateToArucoRequest
+from rail_stretch_navigation.srv import NavigateToAruco, NavigateToArucoRequest, GraspAruco, GraspArucoRequest
 from rail_stretch_manipulation.joint_controller import JointController, Joints
 from rail_stretch_state.srv import ExecuteStretchMission, ExecuteStretchMissionResponse
 
@@ -18,17 +18,9 @@ class StretchState():
         self.rate = 10.0
         self.joint_controller = JointController()
 
-        rospy.wait_for_service('/grasp_object/trigger_grasp_object')
-        rospy.loginfo('Connected to /grasp_object/trigger_grasp_object')
-        self.trigger_grasp_object_service = rospy.ServiceProxy('/grasp_object/trigger_grasp_object', Trigger)
-        
-        rospy.wait_for_service('/funmap/trigger_lower_until_contact')
-        rospy.loginfo(' Connected to /funmap/trigger_lower_until_contact.')
-        self.trigger_lower_until_contact_service = rospy.ServiceProxy('/funmap/trigger_lower_until_contact', Trigger)
-
-        rospy.wait_for_service('/funmap/trigger_align_with_nearest_cliff')
-        rospy.loginfo(' Connected to /funmap/trigger_align_with_nearest_cliff')
-        self.trigger_align_with_nearest_cliff_service = rospy.ServiceProxy('/funmap/trigger_align_with_nearest_cliff', Trigger)
+        rospy.wait_for_service('/aruco_grasper/grasp_aruco')
+        rospy.loginfo('Connected to /aruco_grasper/grasp_aruco')
+        self.trigger_grasp_object_service = rospy.ServiceProxy('/aruco_grasper/grasp_aruco', GraspAruco)
 
         rospy.wait_for_service('/switch_to_navigation_mode')
         rospy.loginfo('Connected to /switch_to_navigation_mode')
@@ -71,9 +63,9 @@ class StretchState():
         self.STATE = States.GRASPING
         self.switch_to_position_mode_service(trigger_request)
 
-        result = self.trigger_grasp_object_service(trigger_request)
+        result = self.trigger_grasp_object_service(GraspArucoRequest(5))
         
-        if result.success == False:
+        if result.grasp_finished == False:
             server_response.response = "Couldn't grasp object"
             server_response.mission_success = False
             self.STATE = States.WAITING
@@ -105,14 +97,6 @@ class StretchState():
 
         self.joint_controller.extend_arm()
         
-        result = self.trigger_lower_until_contact_service(trigger_request)
-        
-        if result.success == False:
-            server_response.response = "Couldn't find a contact to place object"
-            server_response.mission_success = False
-            self.STATE = States.WAITING
-            return server_response
-            
         self.joint_controller.place_object()
 
         '''

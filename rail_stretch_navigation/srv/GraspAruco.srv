@@ -1,0 +1,3 @@
+int32 aruco_id
+---
+bool grasp_finished

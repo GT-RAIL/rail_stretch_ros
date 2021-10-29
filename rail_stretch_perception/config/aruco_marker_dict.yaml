@@ -15,30 +15,28 @@
   '0':
     'length_mm': 178
     'use_rgb_only': False
+    'name': 'test_0'
+    'link': None
+  '1':
+    'type': 'LOCATION'
+    'length_mm': 200
+    'use_rgb_only': False
     'name': 'tall_table'
     'link': None
     'x_offset' : 0.0
-    'y_offset' : 0.7
+    'z_offset' : 0.7
     'alignment_axis': 'x'
-    'flip_alignment': False
-  '1':
-    'length_mm': 200
-    'use_rgb_only': False
-    'name': 'kitchen_counter'
-    'link': None
+    'flip_alignment': True
   '2':
     'length_mm': 200
     'use_rgb_only': False
-    'name': 'short_table'
+    'name': 'test_2'
     'link': None
-    'x_offset' : 0.0
-    'y_offset' : -0.7
-    'alignment_axis': 'x'
-    'flip_alignment': True
   '3':
+    'type': 'LOCATION'
     'length_mm': 200
     'use_rgb_only': False
-    'name': 'test_3'
+    'name': 'kitchen_counter'
     'link': None
     'x_offset' : -0.3
     'z_offset' : 0.7
@@ -50,6 +48,9 @@
     'name': 'test_4'
     'link': None
   '5':
+    'type': 'OBJECT'
+    'height_offset': 0.05
+    'depth_offset': 0.02
     'length_mm': 65
     'use_rgb_only': False
     'name': 'test_5'
