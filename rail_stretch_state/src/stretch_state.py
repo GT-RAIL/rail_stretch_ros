@@ -22,9 +22,13 @@ class StretchState():
         rospy.loginfo('Connected to /grasp_object/trigger_grasp_object')
         self.trigger_grasp_object_service = rospy.ServiceProxy('/grasp_object/trigger_grasp_object', Trigger)
         
-        # rospy.wait_for_service('/funmap/trigger_lower_until_contact')
-        # rospy.loginfo(' Connected to /funmap/trigger_lower_until_contact.')
-        # self.trigger_lower_until_contact_service = rospy.ServiceProxy('/funmap/trigger_lower_until_contact', Trigger)
+        rospy.wait_for_service('/funmap/trigger_lower_until_contact')
+        rospy.loginfo(' Connected to /funmap/trigger_lower_until_contact.')
+        self.trigger_lower_until_contact_service = rospy.ServiceProxy('/funmap/trigger_lower_until_contact', Trigger)
+
+        rospy.wait_for_service('/funmap/trigger_align_with_nearest_cliff')
+        rospy.loginfo(' Connected to /funmap/trigger_align_with_nearest_cliff')
+        self.trigger_align_with_nearest_cliff_service = rospy.ServiceProxy('/funmap/trigger_align_with_nearest_cliff', Trigger)
 
         rospy.wait_for_service('/switch_to_navigation_mode')
         rospy.loginfo('Connected to /switch_to_navigation_mode')

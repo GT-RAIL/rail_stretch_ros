@@ -7,9 +7,25 @@ from geometry_msgs.msg import TransformStamped
 from rail_stretch_manipulation.joint_controller import JointController, Joints
 
 class ArucoManager:
+  MIN_LIFT = 0.3
+  MAX_LIFT = 1.09
+  MIN_WRIST_EXTENSION = 0.01
+  MAX_WRIST_EXTENSION = 0.5
+
   def __init__(self) -> None:
     self.joint_controller = JointController()
-    self.joint_controller.set_cmd([Joints.joint_head_tilt], [-math.pi / 8], wait=True)
+    self.joint_controller.set_cmd(joints=[
+            Joints.joint_wrist_yaw,
+            Joints.joint_head_pan,
+            Joints.joint_head_tilt,
+            Joints.gripper_aperture,
+            Joints.wrist_extension,
+            Joints.joint_lift
+            ],
+            values=[math.pi, 0, 0, 0, ArucoManager.MIN_WRIST_EXTENSION, ArucoManager.MIN_LIFT], # gripper stowed, camera facing forward, camera horizontal to floor, gripper close
+            wait=True)
+
+    self.joint_controller.set_cmd([Joints.joint_head_tilt], [-math.pi / 6], wait=True)
 
     self.rate = rospy.Rate(10)
     self.broadcaster = tf2_ros.StaticTransformBroadcaster()
@@ -28,10 +44,11 @@ class ArucoManager:
   def run(self) -> None:
     while not rospy.is_shutdown():
       for aruco_name in self.aruco_names:
-        if self.tf_buffer.can_transform('map', aruco_name, rospy.Time(0)):
-          transform = self.tf_buffer.lookup_transform('map', aruco_name, rospy.Time(0))
+        if aruco_name != 'unknown':
+          if self.tf_buffer.can_transform('map', aruco_name, rospy.Time(0)):
+            transform = self.tf_buffer.lookup_transform('map', aruco_name, rospy.Time(0))
 
-          self.broadcast_static_transform(transform)
+            self.broadcast_static_transform(transform)
 
       self.rate.sleep()
 

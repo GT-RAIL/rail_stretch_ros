@@ -52,7 +52,7 @@ class NavigateToArucoAction:
 
     if params:
       x_offset = self.get_aruco_param('x_offset', aruco_id, default=0)
-      y_offset = self.get_aruco_param('y_offset', aruco_id, default=0)
+      z_offset = self.get_aruco_param('z_offset', aruco_id, default=0)
       name = self.get_aruco_param('name', aruco_id)
 
       try:
@@ -64,19 +64,19 @@ class NavigateToArucoAction:
         p.header.frame_id = name
         p.header.stamp = rospy.Time(0)
         p.pose.position.x = x_offset
-        p.pose.position.y = y_offset
+        p.pose.position.z = z_offset
         p.pose.orientation.w = 1
         
         if alignment_axis == 'x':
           if flip_alignment:
-            p.pose.orientation = ros_quaternion_from_euler(0, 0, math.pi)
+            p.pose.orientation = ros_quaternion_from_euler(math.pi / 2, 0, math.pi)
           else:
-            p.pose.orientation = ros_quaternion_from_euler(0, 0, 0)
+            p.pose.orientation = ros_quaternion_from_euler(math.pi / 2, 0, 0)
         else:
           if flip_alignment:
-            p.pose.orientation = ros_quaternion_from_euler(0, 0, math.pi / 2)
+            p.pose.orientation = ros_quaternion_from_euler(math.pi / 2, 0, math.pi / 2)
           else:
-            p.pose.orientation = ros_quaternion_from_euler(0, 0, 1.5 * math.pi)
+            p.pose.orientation = ros_quaternion_from_euler(math.pi / 2, 0, 1.5 * math.pi)
 
         p_in_map_frame = tf2_geometry_msgs.do_transform_pose(p, transform)
         p_in_map_frame.pose.position.z = 0
