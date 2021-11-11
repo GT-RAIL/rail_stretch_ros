@@ -38,7 +38,7 @@
     'use_rgb_only': False
     'name': 'kitchen_counter'
     'link': None
-    'x_offset' : -0.1
+    'x_offset' : 0.0
     'z_offset' : 0.7
     'alignment_axis': 'x'
     'flip_alignment': True

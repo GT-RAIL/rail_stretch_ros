@@ -6,32 +6,26 @@ import tf2_ros
 import tf2_geometry_msgs
 from std_srvs.srv import Trigger
 from geometry_msgs.msg import PoseStamped
-from joint_controller import JointController, Joints
+from rail_stretch_manipulation.joint_controller import JointController, Joints
 from visualization_msgs.msg import MarkerArray
 from rail_stretch_navigation.srv import GraspAruco
 
 class ArucoGrasper(object):
-    MARKER_ID = 4
-    MIN_LIFT = 0.3
-    MAX_LIFT = 1.09
-    MIN_WRIST_EXTENSION = 0.01
-    MAX_WRIST_EXTENSION = 0.5
-
     LIFT_HEIGHT = 0.05
 
     def get_bounded_lift(self, lift_value):
-        if lift_value > ArucoGrasper.MAX_LIFT:
-            return ArucoGrasper.MAX_LIFT
-        elif lift_value < ArucoGrasper.MIN_LIFT:
-            return ArucoGrasper.MIN_LIFT
+        if lift_value > JointController.MAX_LIFT:
+            return JointController.MAX_LIFT
+        elif lift_value < JointController.MIN_LIFT:
+            return JointController.MIN_LIFT
 
         return lift_value
 
     def get_bounded_extension(self, extension_value):
-        if extension_value > ArucoGrasper.MAX_WRIST_EXTENSION:
-            return ArucoGrasper.MAX_WRIST_EXTENSION
-        elif extension_value < ArucoGrasper.MIN_WRIST_EXTENSION:
-            return ArucoGrasper.MIN_WRIST_EXTENSION
+        if extension_value > JointController.MAX_WRIST_EXTENSION:
+            return JointController.MAX_WRIST_EXTENSION
+        elif extension_value < JointController.MIN_WRIST_EXTENSION:
+            return JointController.MIN_WRIST_EXTENSION
 
         return extension_value
 
@@ -42,16 +36,9 @@ class ArucoGrasper(object):
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
         self.joint_controller = JointController()
         self.markers = []
-        self.joint_controller.set_cmd(joints=[
-            Joints.joint_wrist_yaw,
-            Joints.joint_head_pan,
-            Joints.joint_head_tilt,
-            Joints.gripper_aperture,
-            Joints.wrist_extension,
-            Joints.joint_lift
-            ],
-            values=[math.pi, 0, -math.pi / 6, 0, ArucoGrasper.MIN_WRIST_EXTENSION, ArucoGrasper.MIN_LIFT], # gripper stowed, camera facing forward, camera horizontal to floor, gripper close
-            wait=True)
+
+        self.joint_controller.stow()
+
         rospy.Subscriber('/aruco/marker_array', MarkerArray, self.aruco_detected_callback)
 
     def get_displacement(self, marker):
@@ -117,7 +104,7 @@ class ArucoGrasper(object):
                     wait=True)
 
                 self.joint_controller.set_cmd(joints=[Joints.wrist_extension],
-                    values=[ArucoGrasper.MIN_WRIST_EXTENSION],
+                    values=[JointController.MIN_WRIST_EXTENSION],
                     wait=True)
 
                 return True

@@ -11,8 +11,11 @@ class States(Enum):
     NAVIGATING = 1
     GRASPING = 2
     PLACING = 3
+    FAILED = 4
 
 class StretchState():
+    ATTEMPTS = 4
+
     def __init__(self):
         self.STATE = States.WAITING
         self.rate = 10.0
@@ -43,8 +46,10 @@ class StretchState():
             self.aruco_names.append(aruco_datum['name'])
     
     def stretch_mission_handler(self, request):
-        trigger_request = TriggerRequest() 
+        trigger_request = TriggerRequest()
         server_response = ExecuteStretchMissionResponse()
+
+        self.joint_controller.stow()
 
         '''
         NAVIGATE TO FIRST ARUCO MARKER
@@ -52,15 +57,23 @@ class StretchState():
         self.STATE = States.NAVIGATING
         
         self.switch_to_navigation_mode_service(trigger_request)
-
+        
         navigate_to_aruco_goal = NavigateToArucoRequest()
         navigate_to_aruco_goal.aruco_name = request.from_aruco_name
-        result = self.navigate_to_aruco_service(navigate_to_aruco_goal)
+
+        result = None
+        
+        for i in range(StretchState.ATTEMPTS):
+            result = self.navigate_to_aruco_service(navigate_to_aruco_goal)
+
+            if result.navigation_succeeded == True:
+                break
 
         if result.navigation_succeeded == False:
             server_response.response = "Couldn't navigate to goal"
             server_response.mission_success = False
             self.STATE = States.WAITING
+            self.joint_controller.stow()
             return server_response
 
         '''
@@ -68,16 +81,18 @@ class StretchState():
         '''
         self.STATE = States.GRASPING
         self.switch_to_position_mode_service(trigger_request)
-        
-        for index, aruco_name in enumerate(self.aruco_names):
-            if aruco_name != 'unknown' and request.object_name == aruco_name:
-                result = self.trigger_grasp_object_service(GraspArucoRequest(index))
+
+        for i in range(StretchState.ATTEMPTS):
+            result = self.trigger_grasp_object_service(GraspArucoRequest(self.aruco_names.index(request.object_name)))
+            
+            if result.grasp_finished == True:
                 break
         
         if result.grasp_finished == False:
             server_response.response = "Couldn't grasp object"
             server_response.mission_success = False
             self.STATE = States.WAITING
+            self.joint_controller.stow()
             return server_response
 
         '''
@@ -89,12 +104,18 @@ class StretchState():
 
         navigate_to_aruco_goal = NavigateToArucoRequest()
         navigate_to_aruco_goal.aruco_name = request.to_aruco_name
-        result = self.navigate_to_aruco_service(navigate_to_aruco_goal)
+
+        for i in range(StretchState.ATTEMPTS):
+            result = self.navigate_to_aruco_service(navigate_to_aruco_goal)
+
+            if result.navigation_succeeded == True:
+                break
 
         if result.navigation_succeeded == False:
             server_response.response = "Couldn't navigate to goal"
             server_response.mission_success = False
             self.STATE = States.WAITING
+            self.joint_controller.stow()
             return server_response
 
         '''
@@ -114,6 +135,7 @@ class StretchState():
         self.STATE = States.WAITING
         server_response.response = "Mission completed successfully"
         server_response.mission_success = True
+        self.joint_controller.stow()
         return server_response
 
 if __name__ == '__main__':
