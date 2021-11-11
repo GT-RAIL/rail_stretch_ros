@@ -43,9 +43,12 @@
     'alignment_axis': 'x'
     'flip_alignment': True
   '4':
+    'type': 'OBJECT'
+    'height_offset': 0.05
+    'depth_offset': 0.04
     'length_mm': 65
     'use_rgb_only': False
-    'name': 'test_4'
+    'name': 'cube'
     'link': None
   '5':
     'type': 'OBJECT'
@@ -53,7 +56,7 @@
     'depth_offset': 0.04
     'length_mm': 65
     'use_rgb_only': False
-    'name': 'test_5'
+    'name': 'box'
     'link': None
   'default':
     'length_mm': 24

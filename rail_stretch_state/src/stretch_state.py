@@ -35,6 +35,12 @@ class StretchState():
         self.navigate_to_aruco_service = rospy.ServiceProxy('/navigate_to_aruco_action/navigate_to_aruco', NavigateToAruco)
 
         self.stretch_mission_service = rospy.Service("stretch_mission", ExecuteStretchMission, self.stretch_mission_handler)
+
+        self.aruco_data = rospy.get_param('/aruco_marker_info')
+        self.aruco_names = []
+        
+        for aruco_id, aruco_datum in self.aruco_data.items():
+            self.aruco_names.append(aruco_datum['name'])
     
     def stretch_mission_handler(self, request):
         trigger_request = TriggerRequest() 
@@ -62,8 +68,11 @@ class StretchState():
         '''
         self.STATE = States.GRASPING
         self.switch_to_position_mode_service(trigger_request)
-
-        result = self.trigger_grasp_object_service(GraspArucoRequest(5))
+        
+        for index, aruco_name in enumerate(self.aruco_names):
+            if aruco_name != 'unknown' and request.object_name == aruco_name:
+                result = self.trigger_grasp_object_service(GraspArucoRequest(index))
+                break
         
         if result.grasp_finished == False:
             server_response.response = "Couldn't grasp object"
