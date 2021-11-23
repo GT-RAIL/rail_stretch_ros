@@ -4,7 +4,7 @@
   <include file="$(find rail_stretch_navigation)/launch/rail_stretch_slam.launch"/>
   <include file="$(find rail_stretch_perception)/launch/aruco_manager.launch"/>
   <node name="navigate_to_aruco_action" pkg="rail_stretch_navigation" type="navigate_to_aruco_action.py" output="screen"/>
-  <node name="stower" pkg="rail_stretch_manipulation" type="stower.py" output="screen"/>
   <node name="aruco_grasper" pkg="rail_stretch_manipulation" type="aruco_grasper.py" output="screen"/>
+  <node name="placer" pkg="rail_stretch_manipulation" type="placer.py" output="screen"/>
   <node name="stretch_state" pkg="rail_stretch_state" type="stretch_state.py" output="screen"/>
 </launch>

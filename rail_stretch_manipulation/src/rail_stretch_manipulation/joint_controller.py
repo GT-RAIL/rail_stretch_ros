@@ -41,13 +41,11 @@ class JointController(object):
     def joint_states_callback(self, data):
         self.joint_states = data
 
-    def place_object(self):
-        self.set_cmd(joints=[Joints.joint_lift], values=[self.joint_states.position[Joints.joint_lift.value] - 0.15], wait=True)
+    def place(self):
         self.set_cmd(joints=[Joints.gripper_aperture], values=[0.0445], wait=True)
-        self.set_cmd(joints=[Joints.wrist_extension], values=[0.1], wait=True)
-    
-    def extend_arm(self):
-        self.set_cmd(joints=[Joints.wrist_extension],values=[0.3],wait=True)
+
+    def retract_arm(self):
+        self.set_cmd(joints=[Joints.wrist_extension], values=[JointController.MIN_WRIST_EXTENSION], wait=True)
 
     def stow(self):
         self.set_cmd(joints=[

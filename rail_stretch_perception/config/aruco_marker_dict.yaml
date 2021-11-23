@@ -25,6 +25,8 @@
     'link': None
     'x_offset' : 0.0
     'z_offset' : 0.7
+    'y_place_offset': 0.3
+    'z_place_offset': -0.15
     'alignment_axis': 'x'
     'flip_alignment': True
   '2':
@@ -40,6 +42,8 @@
     'link': None
     'x_offset' : 0.0
     'z_offset' : 0.7
+    'y_place_offset': 0.3
+    'z_place_offset': -0.15
     'alignment_axis': 'x'
     'flip_alignment': True
   '4':

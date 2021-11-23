@@ -74,7 +74,7 @@ class ArucoGrasper(object):
         rospy.sleep(rospy.Duration(5))
 
         for marker in self.markers:
-            if marker.id == req.aruco_id:
+            if marker.text == req.aruco_name:
                 height_offset = rospy.get_param('/aruco_marker_info/{}/height_offset'.format(marker.id), default=0)
                 depth_offset = rospy.get_param('/aruco_marker_info/{}/depth_offset'.format(marker.id), default=0)
                 
