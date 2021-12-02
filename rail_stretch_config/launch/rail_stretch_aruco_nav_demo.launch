@@ -7,5 +7,5 @@
   <node name="aruco_grasper" pkg="rail_stretch_manipulation" type="aruco_grasper.py" output="screen"/>
   <node name="placer" pkg="rail_stretch_manipulation" type="placer.py" output="screen"/>
   <node name="stretch_state" pkg="rail_stretch_state" type="stretch_state.py" output="screen"/>
-  <!-- <node name="stretch_voice" pkg="rail_stretch_state" type="stretch_voice.py" output="screen"/> -->
+  <node name="stretch_voice" pkg="rail_stretch_state" type="stretch_voice.py" output="screen"/>
 </launch>
