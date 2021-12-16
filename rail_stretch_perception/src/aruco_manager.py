@@ -1,10 +1,16 @@
 #! /usr/bin/env python3
 
 import rospy
+import math
 import tf2_ros
 from geometry_msgs.msg import TransformStamped
 
 class ArucoManager:
+  MIN_LIFT = 0.3
+  MAX_LIFT = 1.09
+  MIN_WRIST_EXTENSION = 0.01
+  MAX_WRIST_EXTENSION = 0.5
+
   def __init__(self) -> None:
     self.rate = rospy.Rate(10)
     self.broadcaster = tf2_ros.StaticTransformBroadcaster()
@@ -23,10 +29,11 @@ class ArucoManager:
   def run(self) -> None:
     while not rospy.is_shutdown():
       for aruco_name in self.aruco_names:
-        if self.tf_buffer.can_transform('map', aruco_name, rospy.Time(0)):
-          transform = self.tf_buffer.lookup_transform('map', aruco_name, rospy.Time(0))
+        if aruco_name != 'unknown':
+          if self.tf_buffer.can_transform('map', aruco_name, rospy.Time(0)):
+            transform = self.tf_buffer.lookup_transform('map', aruco_name, rospy.Time(0))
 
-          self.broadcast_static_transform(transform)
+            self.broadcast_static_transform(transform)
 
       self.rate.sleep()
 

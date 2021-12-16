@@ -1,0 +1,6 @@
+string from_aruco_name
+string object_name
+string to_aruco_name
+---
+bool mission_success
+string response

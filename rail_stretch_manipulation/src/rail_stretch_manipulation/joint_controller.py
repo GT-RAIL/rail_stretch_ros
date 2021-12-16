@@ -5,7 +5,7 @@ from trajectory_msgs.msg import JointTrajectoryPoint
 from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryGoal
 from sensor_msgs.msg import JointState
 import actionlib
-from time import sleep
+import math
 import rospy
 
 class Joints(Enum):
@@ -20,11 +20,15 @@ class Joints(Enum):
     joint_wrist_yaw = 8
     joint_gripper_finger_left = 9
     joint_gripper_finger_right = 10
-    joint_mobile_base_translation = 11
-    gripper_aperture = None
-
+    translate_mobile_base = "translate_mobile_base"
+    rotate_mobile_base = "rotate_mobile_base"
+    gripper_aperture = "gripper_aperture"
 
 class JointController(object):
+    MIN_LIFT = 0.3
+    MAX_LIFT = 1.09
+    MIN_WRIST_EXTENSION = 0.01
+    MAX_WRIST_EXTENSION = 0.5
 
     def __init__(self):
         self.joint_states = JointState()
@@ -37,6 +41,24 @@ class JointController(object):
     def joint_states_callback(self, data):
         self.joint_states = data
 
+    def place(self):
+        self.set_cmd(joints=[Joints.gripper_aperture], values=[0.0445], wait=True)
+
+    def retract_arm(self):
+        self.set_cmd(joints=[Joints.wrist_extension], values=[JointController.MIN_WRIST_EXTENSION], wait=True)
+
+    def stow(self):
+        self.set_cmd(joints=[
+            Joints.joint_wrist_yaw,
+            Joints.joint_head_pan,
+            Joints.joint_head_tilt,
+            Joints.gripper_aperture,
+            Joints.wrist_extension,
+            Joints.joint_lift
+            ],
+            values=[math.pi, 0, -math.pi / 6, 0, JointController.MIN_WRIST_EXTENSION, JointController.MIN_LIFT], # gripper stowed, camera facing forward, camera horizontal to floor, gripper close
+            wait=True)
+    
     def set_cmd(self, joints, values, wait):
         point = JointTrajectoryPoint()
         point.time_from_start = rospy.Duration(0.0)
@@ -59,6 +81,6 @@ class JointController(object):
 
         if (wait):
             if len(joint_names)==1 and joint_names[0]=="gripper_aperture":
-                sleep(2)
+                rospy.sleep(rospy.Duration(2))
             else:
                 self.trajectory_client.wait_for_result(rospy.Duration(5.0))

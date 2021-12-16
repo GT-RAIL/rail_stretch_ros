@@ -1,0 +1,3 @@
+string aruco_name
+---
+bool grasp_finished

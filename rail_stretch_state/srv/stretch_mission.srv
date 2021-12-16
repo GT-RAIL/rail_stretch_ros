@@ -1,5 +1,0 @@
-string mode
-geometry_msgs/PoseStamped goal
----
-bool result
-string response

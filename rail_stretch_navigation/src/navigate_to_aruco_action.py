@@ -5,6 +5,7 @@ import actionlib
 import tf2_ros
 import tf2_geometry_msgs
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+from actionlib_msgs.msg import GoalStatus
 from geometry_msgs.msg import PoseStamped, Quaternion
 from rail_stretch_navigation.srv import NavigateToAruco
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
@@ -32,6 +33,12 @@ class NavigateToArucoAction:
 
     self.move_base_client.wait_for_server()
 
+    self.aruco_data = rospy.get_param('/aruco_marker_info')
+    self.aruco_names = {}
+
+    for aruco_id, aruco_datum in self.aruco_data.items():
+      self.aruco_names[aruco_datum['name']] = aruco_id
+
   def get_aruco_param(self, param_name, aruco_id, default=None):
     if not default:
       return rospy.get_param('/aruco_marker_info/{}/{}'.format(aruco_id, param_name))
@@ -39,36 +46,37 @@ class NavigateToArucoAction:
     return rospy.get_param('/aruco_marker_info/{}/{}'.format(aruco_id, param_name), default=default)
 
   def navigate_to_aruco(self, req):
-    rospy.logwarn('NAVIGATE TO ARUCO WITH ID: {}'.format(req.aruco_id))
-    params = rospy.get_param('/aruco_marker_info/{}'.format(req.aruco_id))
+    aruco_id = self.aruco_names[req.aruco_name]
+    rospy.logwarn('NAVIGATE TO ARUCO WITH ID: {}'.format(aruco_id))
+    params = rospy.get_param('/aruco_marker_info/{}'.format(aruco_id))
 
     if params:
-      x_offset = self.get_aruco_param('x_offset', req.aruco_id, default=0)
-      y_offset = self.get_aruco_param('y_offset', req.aruco_id, default=0)
-      name = self.get_aruco_param('name', req.aruco_id)
+      x_offset = self.get_aruco_param('x_offset', aruco_id, default=0)
+      z_offset = self.get_aruco_param('z_offset', aruco_id, default=0)
+      name = self.get_aruco_param('name', aruco_id)
 
       try:
-        alignment_axis = self.get_aruco_param('alignment_axis', req.aruco_id, 'x')
-        flip_alignment = self.get_aruco_param('flip_alignment', req.aruco_id, default=False)
+        alignment_axis = self.get_aruco_param('alignment_axis', aruco_id, 'x')
+        flip_alignment = self.get_aruco_param('flip_alignment', aruco_id, default=False)
         
         transform = self.tf_buffer.lookup_transform('map', name + '_static', rospy.Time(0), rospy.Duration(10.0))
         p = PoseStamped()
         p.header.frame_id = name
         p.header.stamp = rospy.Time(0)
         p.pose.position.x = x_offset
-        p.pose.position.y = y_offset
+        p.pose.position.z = z_offset
         p.pose.orientation.w = 1
         
         if alignment_axis == 'x':
           if flip_alignment:
-            p.pose.orientation = ros_quaternion_from_euler(0, 0, math.pi)
+            p.pose.orientation = ros_quaternion_from_euler(math.pi / 2, 0, math.pi)
           else:
-            p.pose.orientation = ros_quaternion_from_euler(0, 0, 0)
+            p.pose.orientation = ros_quaternion_from_euler(math.pi / 2, 0, 0)
         else:
           if flip_alignment:
-            p.pose.orientation = ros_quaternion_from_euler(0, 0, math.pi / 2)
+            p.pose.orientation = ros_quaternion_from_euler(math.pi / 2, 0, math.pi / 2)
           else:
-            p.pose.orientation = ros_quaternion_from_euler(0, 0, 1.5 * math.pi)
+            p.pose.orientation = ros_quaternion_from_euler(math.pi / 2, 0, 1.5 * math.pi)
 
         p_in_map_frame = tf2_geometry_msgs.do_transform_pose(p, transform)
         p_in_map_frame.pose.position.z = 0
@@ -80,8 +88,10 @@ class NavigateToArucoAction:
         goal = MoveBaseGoal()
         goal.target_pose = p_in_map_frame
 
-        self.move_base_client.send_goal_and_wait(goal)
-        return True
+        state = self.move_base_client.send_goal_and_wait(goal, execute_timeout=rospy.Duration(200), preempt_timeout=rospy.Duration(200))
+
+        if state == GoalStatus.SUCCEEDED:
+          return True
 
       except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
         rospy.logerr(e)
