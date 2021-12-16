@@ -60,54 +60,56 @@ class ArucoGrasper(object):
         self.switch_base_to_manipulation = rospy.ServiceProxy('/switch_to_position_mode', Trigger)
         self.switch_base_to_manipulation()
 
-        self.joint_controller.set_cmd(joints=[
-            Joints.joint_wrist_yaw,
-            Joints.joint_head_pan,
-            Joints.joint_head_tilt,
-            Joints.gripper_aperture
-            ],
-            values=[0, -math.pi / 2, -math.pi/6, 0.0445], # gripper facing right, camera facing right, camera tilted towards floor, gripper open
-            wait=True)
+
+        for i in range(-1, 2):
+            self.joint_controller.set_cmd(joints=[
+                Joints.joint_wrist_yaw,
+                Joints.joint_head_pan,
+                Joints.joint_head_tilt,
+                Joints.gripper_aperture
+                ],
+                values=[0, -math.pi / 2 + ((math.pi / 6) * i) , -math.pi/6, 0.0445], # gripper facing right, camera facing right, camera tilted towards floor, gripper open
+                wait=True)
 
 
-        # wait for aruco detection
-        rospy.sleep(rospy.Duration(5))
+            # wait for aruco detection
+            rospy.sleep(rospy.Duration(5))
 
-        for marker in self.markers:
-            if marker.text == req.aruco_name:
-                height_offset = rospy.get_param('/aruco_marker_info/{}/height_offset'.format(marker.id), default=0)
-                depth_offset = rospy.get_param('/aruco_marker_info/{}/depth_offset'.format(marker.id), default=0)
-                
+            for marker in self.markers:
+                if marker.text == req.aruco_name:
+                    height_offset = rospy.get_param('/aruco_marker_info/{}/height_offset'.format(marker.id), default=0)
+                    depth_offset = rospy.get_param('/aruco_marker_info/{}/depth_offset'.format(marker.id), default=0)
+                    
 
-                displacement = self.get_displacement(marker)
-                print(self.joint_controller.joint_states.position[Joints.joint_lift.value] + displacement.z + height_offset)
-                self.joint_controller.set_cmd(joints=[
-                        Joints.joint_lift,
-                        Joints.translate_mobile_base
-                    ],
-                    values=[
-                        self.get_bounded_lift(self.joint_controller.joint_states.position[Joints.joint_lift.value] + displacement.z + height_offset),    
-                        displacement.y
-                    ],
-                    wait=True)
+                    displacement = self.get_displacement(marker)
+                    print(self.joint_controller.joint_states.position[Joints.joint_lift.value] + displacement.z + height_offset)
+                    self.joint_controller.set_cmd(joints=[
+                            Joints.joint_lift,
+                            Joints.translate_mobile_base
+                        ],
+                        values=[
+                            self.get_bounded_lift(self.joint_controller.joint_states.position[Joints.joint_lift.value] + displacement.z + height_offset),    
+                            displacement.y
+                        ],
+                        wait=True)
 
-                self.joint_controller.set_cmd(joints=[Joints.wrist_extension],
-                    values=[self.get_bounded_extension(self.joint_controller.joint_states.position[Joints.wrist_extension.value] + displacement.x + depth_offset)],
-                    wait=True)
+                    self.joint_controller.set_cmd(joints=[Joints.wrist_extension],
+                        values=[self.get_bounded_extension(self.joint_controller.joint_states.position[Joints.wrist_extension.value] + displacement.x + depth_offset)],
+                        wait=True)
 
-                self.joint_controller.set_cmd(joints=[Joints.gripper_aperture], values=[0.01], wait=True)
+                    self.joint_controller.set_cmd(joints=[Joints.gripper_aperture], values=[0.01], wait=True)
 
-                rospy.sleep(rospy.Duration(1))
+                    rospy.sleep(rospy.Duration(1))
 
-                self.joint_controller.set_cmd(joints=[Joints.joint_lift],
-                    values=[self.get_bounded_lift(self.joint_controller.joint_states.position[Joints.joint_lift.value] + ArucoGrasper.LIFT_HEIGHT)],
-                    wait=True)
+                    self.joint_controller.set_cmd(joints=[Joints.joint_lift],
+                        values=[self.get_bounded_lift(self.joint_controller.joint_states.position[Joints.joint_lift.value] + ArucoGrasper.LIFT_HEIGHT)],
+                        wait=True)
 
-                self.joint_controller.set_cmd(joints=[Joints.wrist_extension],
-                    values=[JointController.MIN_WRIST_EXTENSION],
-                    wait=True)
+                    self.joint_controller.set_cmd(joints=[Joints.wrist_extension],
+                        values=[JointController.MIN_WRIST_EXTENSION],
+                        wait=True)
 
-                return True
+                    return True
 
     def aruco_detected_callback(self, msg):
         self.markers = msg.markers

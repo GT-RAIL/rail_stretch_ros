@@ -21,7 +21,7 @@
     'type': 'LOCATION'
     'length_mm': 200
     'use_rgb_only': False
-    'name': 'tall_table'
+    'name': 'kitchen counter'
     'link': None
     'x_offset' : 0.0
     'z_offset' : 0.7
@@ -38,7 +38,7 @@
     'type': 'LOCATION'
     'length_mm': 200
     'use_rgb_only': False
-    'name': 'kitchen_counter'
+    'name': 'tall table'
     'link': None
     'x_offset' : 0.0
     'z_offset' : 0.7

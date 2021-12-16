@@ -9,12 +9,11 @@ from rail_stretch_state.srv import ExecuteStretchMission, ExecuteStretchMissionR
 class StretchVoice():
     def __init__(self):
         self.synth = pyttsx3.init()
-        self.synth.setProperty('volume', 0.2) #default is 1
+        self.synth.setProperty('volume', 1.0) #default is 1
         self.synth.setProperty('rate', 140) #default is 200
         self.objectStr = "None"
         self.locationStr = "None"
         self.destinationStr = "None"
-        self.synth.say("I did not hear an object to move.")
 
         input_config = speechSDK.AudioConfig(use_default_microphone=True) #(device_name=str(get_respeaker_device_id()))
         intent_config = speechSDK.SpeechConfig(subscription="0d7b97472e56436da92d7257b8837646", region="westus")
@@ -22,13 +21,18 @@ class StretchVoice():
 
         model = speechSDK.intent.LanguageUnderstandingModel(app_id="c73fe257-f15e-4532-ae8a-5ffe6640678f")
         self.intent_recognizer.add_all_intents(model)
-        self.repeat = True
         rospy.wait_for_service('/stretch_mission')
         rospy.loginfo('Connected to /stretch_mission')
         self.trigger_stretch_mission_service = rospy.ServiceProxy('/stretch_mission', ExecuteStretchMission)
         self.stretch_voice_service = rospy.Service("stretch_voice", Trigger, self.stretch_voice_handler)
+        self.aruco_data = rospy.get_param('/aruco_marker_info')
+        self.aruco_names = []
+        
+        for aruco_id, aruco_datum in self.aruco_data.items():
+            self.aruco_names.append(aruco_datum['name'])
     
     def stretch_voice_handler(self,request):
+        self.repeat = True
         while(self.repeat):
             print("Say something...")
             intent_result = self.intent_recognizer.recognize_once()
@@ -36,7 +40,7 @@ class StretchVoice():
 
             heard = False
             intent_id = None
-            object = None
+            objects = None
             location = None
             destination = None
 
@@ -51,8 +55,8 @@ class StretchVoice():
                     for i in entityList:
                         eType = str(i['type'])
                         childEntity = str(i['children'][0]['entity'])
-                        if eType == 'Object Phrase' and object == None:
-                            object = childEntity
+                        if eType == 'Object Phrase' and objects == None:
+                            objects = childEntity
                         elif eType == 'Location Phrase' and location == None:
                             location = childEntity
                         elif eType == 'Destination Phrase' and destination == None:
@@ -75,8 +79,8 @@ class StretchVoice():
                 self.locationStr = "None"
                 self.destinationStr = "None"
 
-                if not object == None:
-                    self.objectStr = str(object)
+                if not objects == None:
+                    self.objectStr = str(objects)
                 if not location == None:
                     self.locationStr = str(location)
                 if not destination == None:
@@ -88,23 +92,30 @@ class StretchVoice():
                 print("Location: " + self.locationStr)
                 print("Destination: " + self.destinationStr)
 
-                if object == None:
+                if objects == None:
                     self.synth.say("I did not hear an object to move.")
                 elif location == None:
                     self.synth.say("I did not hear the location of the " + self.objectStr)
                 elif destination == None:
                     self.synth.say("I did not hear where you want me to put the " + self.objectStr)
+                elif destination not in self.aruco_names:
+                    self.synth.say("I did not see the destination before")
+                elif location not in self.aruco_names:
+                    self.synth.say("I did not see the location before")
+                elif objects not in self.aruco_names:
+                    self.synth.say("I don't have " + + self.objectStr + " in my database")
                 else:
                     self.repeat = False
                     self.synth.say("I will bring the " + self.objectStr + " from the " + self.locationStr + " to the " + self.destinationStr)
 
             if self.repeat:
                 self.synth.say("Please try again")
-
+            self.synth.runAndWait()
+        
         mission_request = ExecuteStretchMissionRequest()
-        mission_request.from_aruco_name = 'tall_table'
-        mission_request.object_name = 'box'
-        mission_request.to_aruco_name = 'kitchen_counter'
+        mission_request.from_aruco_name = self.locationStr
+        mission_request.object_name = self.objectStr
+        mission_request.to_aruco_name = self.destinationStr
         result = self.trigger_stretch_mission_service(mission_request)
         if result.mission_success == True:
             return TriggerResponse(
@@ -117,7 +128,6 @@ class StretchVoice():
             message='Failed with voice input'
             )
         
-        self.synth.runAndWait()
         self.synth.stop()
 
 
